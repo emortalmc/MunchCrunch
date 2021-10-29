@@ -38,7 +38,7 @@ dependencies {
     compileOnly(kotlin("reflect"))
 
     // Compile Minestom into project
-    compileOnly("com.github.Minestom:Minestom:-SNAPSHOT")
+    compileOnly("com.github.Minestom", "Minestom", "85d9256fa8")
 
     // import kotlinx serialization
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
@@ -63,17 +63,16 @@ tasks {
     }
 
     // Set name, minimize, and merge service files
-    named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    named<ShadowJar>("shadowJar") {
         archiveBaseName.set(project.name)
         mergeServiceFiles()
         minimize()
+        destinationDirectory.set(File("D:\\coding\\java\\GITHUB\\Sabre\\build\\libs\\extensions"))
     }
-
     test { useJUnitPlatform() }
 
     // Make build depend on shadowJar as shading dependencies will most likely be required.
     build { dependsOn(shadowJar) }
-
 }
 
 java {
