@@ -42,6 +42,7 @@ dependencies {
 
     // import kotlinx serialization
     compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
+    implementation("org.mariadb.jdbc:mariadb-java-client:2.7.3")
 }
 tasks.withType<Test> {
     useJUnitPlatform()
@@ -66,7 +67,7 @@ tasks {
     named<ShadowJar>("shadowJar") {
         archiveBaseName.set(project.name)
         mergeServiceFiles()
-        minimize()
+        //minimize()
         destinationDirectory.set(File("D:\\coding\\java\\GITHUB\\Sabre\\build\\libs\\extensions"))
     }
     test { useJUnitPlatform() }
