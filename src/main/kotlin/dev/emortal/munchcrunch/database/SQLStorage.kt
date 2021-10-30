@@ -63,6 +63,37 @@ class SQLStorage(credentials: Config) {
 
     }
 
+    fun updateColumnsWhere(table: String, columns: List<String>, where: String, values: Values){
+        var sqlString = "UPDATE $table SET "
+        var valuesString = ""
+
+        for(i in 1..columns.size){
+            if(i == columns.size){
+                valuesString += if(values.values[i-1] is String){
+                    "${columns[i-1]} = '${values.values[i-1]}' "
+                }else{
+                    "${columns[i-1]} = ${values.values[i-1]} "
+                }
+                continue
+            }
+            valuesString += if(values.values[i-1] is String){
+                "${columns[i-1]} = '${values.values[i-1]}', "
+            }else{
+                "${columns[i-1]} = ${values.values[i-1]}, "
+            }
+        }
+        sqlString += valuesString
+        sqlString += "WHERE $where;"
+        val preparedStatement = connection!!.prepareStatement(sqlString)
+        println(sqlString)
+        try{
+            preparedStatement.executeUpdate()
+            logger!!.info("Successfully updated $columns to ${valuesString}where $where")
+        }catch (ex: SQLException){
+            ex.printStackTrace()
+        }
+    }
+
     fun getColumnsWhere(table: String, column: String, where: String, limit: Int = 1): List<Values> {
         val preparedStatement = connection!!.prepareStatement("SELECT $column FROM $table WHERE $where")
         val resultList = mutableListOf<Values>()
