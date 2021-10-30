@@ -3,8 +3,6 @@ package dev.emortal.munchcrunch.database
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
-import org.mariadb.jdbc.Driver
-import java.util.*
 
 class SQLStorage(creds: Config) {
     private val host: String = creds.host
@@ -15,11 +13,55 @@ class SQLStorage(creds: Config) {
 
     private var connection: Connection? = null
 
-    fun set(table: String, column: String, data: Any) {
+
+    fun insertIntoTable(table: String, columns: List<String>, vararg data: Values) {
+        val statement = connection!!.createStatement()
+        var values = ""
+        var sqlColumns = "("
+        for(i in 1..columns.size){
+            if(i == columns.size){
+                sqlColumns += columns[i-1]
+                continue
+            }
+            sqlColumns += "${columns[i-1]},"
+        }
+        sqlColumns += ")"
+        for(i in 1..data.size){
+            values += "("
+            for(y in 1..data[i-1].values.size){
+                if(y == data[i-1].values.size){
+                    if(data[i-1].values[y-1] is String){
+                        values += "'${data[i-1].values[y-1]}'"
+                    }else{
+                        values += "${data[i-1].values[y-1]}"
+                    }
+                    continue
+                }
+                if(data[i-1].values[y-1] is String){
+                    values += "'${data[i-1].values[y-1]}',"
+                }else{
+                    values += "${data[i-1].values[y-1]},"
+                }
+            }
+            if(i == data.size){
+                values += ")"
+                continue
+            }
+            values += "),"
+        }
+
+        val sqlQuery = "INSERT INTO $table $sqlColumns VALUES $values"
+
+        try{
+            statement.executeUpdate(sqlQuery)
+            println("[MunchCrunch] Successfully inserted $values into $table")
+        }catch (ex: SQLException){
+            ex.printStackTrace()
+        }
 
     }
 
-    /*fun get(table: String, column: String): Any {
+    /*fun get(table: String, column: String, where: String): Any {
         return
     }*/
 
