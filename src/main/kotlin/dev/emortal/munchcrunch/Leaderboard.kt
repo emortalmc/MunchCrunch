@@ -1,4 +1,6 @@
 package dev.emortal.munchcrunch
 
-class Leaderboard {
+import net.kyori.adventure.text.Component
+
+class Leaderboard(title: Component, top: Int, stat: String, orderStyle: String = "DESC") {
 }
