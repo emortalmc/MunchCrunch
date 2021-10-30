@@ -3,6 +3,7 @@ package dev.emortal.munchcrunch.database
 import net.minestom.server.MinecraftServer
 import java.sql.Connection
 import java.sql.DriverManager
+import java.sql.ResultSet
 import java.sql.SQLException
 
 class SQLStorage(credentials: Config) {
@@ -18,7 +19,6 @@ class SQLStorage(credentials: Config) {
 
 
     fun insertIntoTable(table: String, columns: List<String>, vararg data: Values) {
-        val statement = connection!!.createStatement()
         var values = ""
         var sqlColumns = "("
         for(i in 1..columns.size){
@@ -53,10 +53,10 @@ class SQLStorage(credentials: Config) {
             values += "),"
         }
 
-        val sqlQuery = "INSERT INTO $table $sqlColumns VALUES $values"
+        val preparedStatement = connection!!.prepareStatement("INSERT INTO $table $sqlColumns VALUES $values;")
 
         try{
-            statement.executeUpdate(sqlQuery)
+            preparedStatement.executeUpdate()
             logger!!.info("Successfully inserted $values into $table")
         }catch (ex: SQLException){
             ex.printStackTrace()
@@ -64,9 +64,18 @@ class SQLStorage(credentials: Config) {
 
     }
 
-    /*fun get(table: String, column: String, where: String): Any {
-        return
-    }*/
+    fun getColumnWhere(table: String, column: String, where: String, limit: Int = 1): Any {
+        val preparedStatement = connection!!.prepareStatement("SELECT $column FROM $table WHERE $where")
+        val resultList = mutableListOf<Any>()
+        val results = preparedStatement.executeQuery()
+        var i = 0
+        while (results.next() && i < limit){
+            i++
+            resultList.add(results.getString(1))
+        }
+        return if(resultList.isEmpty()) "ERR::404" else resultList
+
+    }
 
     fun connect(){
         if(connection != null){

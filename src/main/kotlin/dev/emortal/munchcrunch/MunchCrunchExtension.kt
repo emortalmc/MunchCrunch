@@ -9,7 +9,6 @@ class MunchCrunchExtension : Extension() {
     override fun initialize() {
         logger.info("has been enabled!")
         databaseUtil = DatabaseUtil()
-
     }
 
     override fun terminate() {
