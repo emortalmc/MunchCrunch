@@ -1,15 +1,18 @@
 package dev.emortal.munchcrunch.database
 
+import net.minestom.server.MinecraftServer
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 
-class SQLStorage(creds: Config) {
-    private val host: String = creds.host
-    private val port: String = creds.port
-    private val username: String = creds.username
-    private val password: String = creds.password
-    private val database: String = creds.database
+class SQLStorage(credentials: Config) {
+    private val logger = MinecraftServer.getExtensionManager().getExtension("MunchCrunch")?.logger
+
+    private val host: String = credentials.host
+    private val port: String = credentials.port
+    private val username: String = credentials.username
+    private val password: String = credentials.password
+    private val database: String = credentials.database
 
     private var connection: Connection? = null
 
@@ -30,17 +33,17 @@ class SQLStorage(creds: Config) {
             values += "("
             for(y in 1..data[i-1].values.size){
                 if(y == data[i-1].values.size){
-                    if(data[i-1].values[y-1] is String){
-                        values += "'${data[i-1].values[y-1]}'"
+                    values += if(data[i-1].values[y-1] is String){
+                        "'${data[i-1].values[y-1]}'"
                     }else{
-                        values += "${data[i-1].values[y-1]}"
+                        "${data[i-1].values[y-1]}"
                     }
                     continue
                 }
-                if(data[i-1].values[y-1] is String){
-                    values += "'${data[i-1].values[y-1]}',"
+                values += if(data[i-1].values[y-1] is String){
+                    "'${data[i-1].values[y-1]}',"
                 }else{
-                    values += "${data[i-1].values[y-1]},"
+                    "${data[i-1].values[y-1]},"
                 }
             }
             if(i == data.size){
@@ -54,7 +57,7 @@ class SQLStorage(creds: Config) {
 
         try{
             statement.executeUpdate(sqlQuery)
-            println("[MunchCrunch] Successfully inserted $values into $table")
+            logger!!.info("Successfully inserted $values into $table")
         }catch (ex: SQLException){
             ex.printStackTrace()
         }
@@ -70,25 +73,25 @@ class SQLStorage(creds: Config) {
             if(connection!!.isClosed) {
                 try{
                     connection = createConnection()
-                    println("[MunchCrunch] Connected to ${database}!")
+                    logger!!.info("Connected to ${database}!")
                 }catch (ex: SQLException){
                     ex.printStackTrace()
                 }
                 return
             }
-            println("[MunchCrunch] Is already connected to ${database}!")
+            logger!!.info("Is already connected to ${database}!")
         }else{
             try{
                 connection = createConnection()
-                println("[MunchCrunch] Connected to ${database}!")
+                logger!!.info("Connected to ${database}!")
             }catch (ex: SQLException){
                 ex.printStackTrace()
             }
         }
     }
 
-    fun createConnection(): Connection {
-        Class.forName("org.mariadb.jdbc.Driver");
+    private fun createConnection(): Connection {
+        Class.forName("org.mariadb.jdbc.Driver")
         return DriverManager.getConnection(
             "jdbc:mariadb://${host}:${port}/${database}",
             username, password
@@ -96,14 +99,14 @@ class SQLStorage(creds: Config) {
     }
     fun disconnect() {
         if (connection == null){
-            println("[MunchCrunch] No connection to disconnect!")
+            logger!!.info("No connection to disconnect!")
             return
         }
         if(connection!!.isClosed) {
-            println("[MunchCrunch] No connection to disconnect!")
+            logger!!.info("No connection to disconnect!")
             return
         }
-        println("[MunchCrunch] Closed connection")
+        logger!!.info("Closed connection")
         connection!!.close()
     }
 }
