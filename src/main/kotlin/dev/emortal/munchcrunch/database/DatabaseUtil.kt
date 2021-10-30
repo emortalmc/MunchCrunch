@@ -11,6 +11,5 @@ import kotlin.io.path.writeText
 class DatabaseUtil() {
 
     init {
-
     }
 }

@@ -11,8 +11,8 @@ class MunchCrunchExtension : Extension() {
     var databaseUtil: DatabaseUtil? = null
     override fun initialize() {
         logger.info("[MunchCrunchExtension] has been enabled!")
-        databaseUtil = DatabaseUtil()
-        initConfigFile(File("./credentials.json"), Config)
+        Config.config = initConfigFile(File("./credentials.json"), Config())
+        println(Config.config.username)
     }
 
     inline fun <reified T : Any> initConfigFile(file: File, emptyObj: T): T {
