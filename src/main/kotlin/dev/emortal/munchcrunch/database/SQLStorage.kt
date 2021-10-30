@@ -104,10 +104,9 @@ class SQLStorage(credentials: Config) {
             resultList.add(Values(results.getString(1)))
         }
         return resultList
-
     }
 
-    fun getTable(table: String, limit: Int = Int.MAX_VALUE): List<Values> {
+    fun getTable(table: String, orderColumn: String = "", orderStyle: String = "", limit: Int = Int.MAX_VALUE): List<Values> {
         val columnsStatement = connection!!
             .prepareStatement(
                     "SELECT COLUMN_NAME " +
@@ -124,7 +123,13 @@ class SQLStorage(credentials: Config) {
 
         val columns = mutableListOf(Values(*columnsList.toTypedArray()))
 
-        val tablePreparedStatement = connection!!.prepareStatement("SELECT * FROM $table")
+        var sqlQuery = "SELECT * FROM $table"
+
+        if(orderStyle.isNotBlank()){
+            sqlQuery += " ORDER BY $orderColumn $orderStyle"
+        }
+
+        val tablePreparedStatement = connection!!.prepareStatement(sqlQuery)
         val tableResults = tablePreparedStatement.executeQuery()
 
         val tempList = mutableListOf<Any>()
