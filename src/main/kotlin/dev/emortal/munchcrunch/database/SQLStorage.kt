@@ -3,7 +3,6 @@ package dev.emortal.munchcrunch.database
 import net.minestom.server.MinecraftServer
 import java.sql.Connection
 import java.sql.DriverManager
-import java.sql.ResultSet
 import java.sql.SQLException
 
 class SQLStorage(credentials: Config) {
@@ -64,17 +63,51 @@ class SQLStorage(credentials: Config) {
 
     }
 
-    fun getColumnWhere(table: String, column: String, where: String, limit: Int = 1): Any {
+    fun getColumnsWhere(table: String, column: String, where: String, limit: Int = 1): List<Values> {
         val preparedStatement = connection!!.prepareStatement("SELECT $column FROM $table WHERE $where")
-        val resultList = mutableListOf<Any>()
+        val resultList = mutableListOf<Values>()
         val results = preparedStatement.executeQuery()
         var i = 0
         while (results.next() && i < limit){
             i++
-            resultList.add(results.getString(1))
+            resultList.add(Values(results.getString(1)))
         }
-        return if(resultList.isEmpty()) "ERR::404" else resultList
+        return resultList
 
+    }
+
+    fun getTable(table: String, limit: Int = Int.MAX_VALUE): List<Values> {
+        val columnsStatement = connection!!
+            .prepareStatement(
+                    "SELECT COLUMN_NAME " +
+                        "FROM INFORMATION_SCHEMA.COLUMNS " +
+                        "WHERE TABLE_NAME  = '$table' " +
+                        "ORDER BY ORDINAL_POSITION"
+            )
+        val columnsList = mutableListOf<String>()
+        val columnsResults = columnsStatement.executeQuery()
+
+        while (columnsResults.next()){
+            columnsList.add(columnsResults.getString(1))
+        }
+
+        val columns = mutableListOf(Values(*columnsList.toTypedArray()))
+
+        val tablePreparedStatement = connection!!.prepareStatement("SELECT * FROM $table")
+        val tableResults = tablePreparedStatement.executeQuery()
+
+        val tempList = mutableListOf<Any>()
+
+        var i = 0
+        while (tableResults.next() && i < limit){
+            i++
+            for (y in 1..columnsList.size){
+                tempList.add(tableResults.getString(y))
+            }
+            columns.add(Values(*tempList.toTypedArray()))
+            tempList.clear()
+        }
+        return columns
     }
 
     fun connect(){

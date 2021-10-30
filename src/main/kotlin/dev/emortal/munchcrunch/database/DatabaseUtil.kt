@@ -9,7 +9,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
-class DatabaseUtil() {
+class DatabaseUtil {
     var mainDB: SQLStorage? = null
     init {
         Config.config = initConfigFile(Path.of("./credentials.json"), Config())
