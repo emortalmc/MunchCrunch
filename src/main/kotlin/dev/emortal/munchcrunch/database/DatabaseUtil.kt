@@ -12,8 +12,8 @@ import kotlin.io.path.writeText
 object DatabaseUtil {
     var mainDB: SQLStorage? = null
     init {
-        Config.config = initConfigFile(Path.of("./credentials.json"), Config())
-        mainDB = SQLStorage(Config.config)
+        DatabaseCredentials.databaseCredentials = initConfigFile(Path.of("./credentials.json"), DatabaseCredentials())
+        mainDB = SQLStorage(DatabaseCredentials.databaseCredentials)
         mainDB!!.connect()
     }
 

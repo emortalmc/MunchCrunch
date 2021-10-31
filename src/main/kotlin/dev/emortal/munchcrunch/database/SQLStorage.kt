@@ -5,7 +5,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 
-class SQLStorage(credentials: Config) {
+class SQLStorage(credentials: DatabaseCredentials) {
     private val logger = MinecraftServer.getExtensionManager().getExtension("MunchCrunch")?.logger
 
     private val host: String = credentials.host
