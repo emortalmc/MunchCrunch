@@ -185,6 +185,6 @@ class SQLStorage(credentials: Config) {
             return
         }
         logger!!.info("Closed connection")
-        connection!!.close()
+        connection?.close()
     }
 }
