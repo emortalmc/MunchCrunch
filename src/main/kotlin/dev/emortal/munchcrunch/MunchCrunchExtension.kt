@@ -8,14 +8,15 @@ import net.minestom.server.extensions.Extension
 class MunchCrunchExtension : Extension() {
 
     override fun initialize() {
-        logger.info("[MunchCrunch] has been enabled!")
         LeaderboardUtil.loadLeaderboards(MinecraftServer.getInstanceManager().createInstanceContainer(), "somestring")
+
+        logger.info("[MunchCrunch] has been enabled!")
     }
 
     override fun terminate() {
-        logger.info("[MunchCrunch] has been disabled!")
         DatabaseUtil.mainDB!!.disconnect()
 
+        logger.info("[MunchCrunch] has been disabled!")
     }
 
 }
