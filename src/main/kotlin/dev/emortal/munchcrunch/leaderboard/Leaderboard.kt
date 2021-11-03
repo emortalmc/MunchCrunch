@@ -20,6 +20,7 @@ class Leaderboard(val id: UUID,
 ) {
     val armorstands = mutableListOf<Entity>()
     fun spawn(){
+        println("work?")
         val titleHologram = Entity(EntityType.ARMOR_STAND)
         titleHologram.customName = Component.text(title)
         titleHologram.isCustomNameVisible = true

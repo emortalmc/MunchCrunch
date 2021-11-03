@@ -18,7 +18,7 @@ object LeaderboardUtil {
             return
         }
         val json = JsonParser.parseString(savedBoards.readText()).asJsonObject
-        json.get("leaderboards").asJsonArray.forEach {
+        json.get("leaderboards").asJsonObject.get(game).asJsonArray.forEach {
             val jsonObject = it.asJsonObject
             leaderboards.add(
                 Leaderboard(
