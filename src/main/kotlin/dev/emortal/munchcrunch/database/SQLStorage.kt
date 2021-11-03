@@ -1,5 +1,9 @@
+//TODO Make calls async
+
 package dev.emortal.munchcrunch.database
 
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.minestom.server.MinecraftServer
 import java.sql.Connection
 import java.sql.DriverManager
@@ -17,133 +21,140 @@ class SQLStorage(credentials: DatabaseCredentials) {
     private var connection: Connection? = null
 
 
-    fun insertIntoTable(table: String, columns: List<String>, vararg data: Values) {
-        var values = ""
-        var sqlColumns = "("
-        for(i in 1..columns.size){
-            if(i == columns.size){
-                sqlColumns += columns[i-1]
-                continue
+    fun insertIntoTable(table: String, columns: List<String>, vararg data: Values) = runBlocking {
+        launch {
+            var values = ""
+            var sqlColumns = "("
+            for(i in 1..columns.size){
+                if(i == columns.size){
+                    sqlColumns += columns[i-1]
+                    continue
+                }
+                sqlColumns += "${columns[i-1]},"
             }
-            sqlColumns += "${columns[i-1]},"
-        }
-        sqlColumns += ")"
-        for(i in 1..data.size){
-            values += "("
-            for(y in 1..data[i-1].values.size){
-                if(y == data[i-1].values.size){
+            sqlColumns += ")"
+            for(i in 1..data.size){
+                values += "("
+                for(y in 1..data[i-1].values.size){
+                    if(y == data[i-1].values.size){
+                        values += if(data[i-1].values[y-1] is String){
+                            "'${data[i-1].values[y-1]}'"
+                        }else{
+                            "${data[i-1].values[y-1]}"
+                        }
+                        continue
+                    }
                     values += if(data[i-1].values[y-1] is String){
-                        "'${data[i-1].values[y-1]}'"
+                        "'${data[i-1].values[y-1]}',"
                     }else{
-                        "${data[i-1].values[y-1]}"
+                        "${data[i-1].values[y-1]},"
+                    }
+                }
+                if(i == data.size){
+                    values += ")"
+                    continue
+                }
+                values += "),"
+            }
+
+            val preparedStatement = connection!!.prepareStatement("INSERT INTO $table $sqlColumns VALUES $values;")
+
+            try{
+                preparedStatement.executeUpdate()
+                logger!!.info("Successfully inserted $values into $table")
+            }catch (ex: SQLException){
+                ex.printStackTrace()
+            }
+        }
+    }
+
+    fun updateColumnsWhere(table: String, columns: List<String>, where: String, values: Values) = runBlocking {
+        launch {
+            var sqlString = "UPDATE $table SET "
+            var valuesString = ""
+
+            for(i in 1..columns.size){
+                if(i == columns.size){
+                    valuesString += if(values.values[i-1] is String){
+                        "${columns[i-1]} = '${values.values[i-1]}' "
+                    }else{
+                        "${columns[i-1]} = ${values.values[i-1]} "
                     }
                     continue
                 }
-                values += if(data[i-1].values[y-1] is String){
-                    "'${data[i-1].values[y-1]}',"
-                }else{
-                    "${data[i-1].values[y-1]},"
-                }
-            }
-            if(i == data.size){
-                values += ")"
-                continue
-            }
-            values += "),"
-        }
-
-        val preparedStatement = connection!!.prepareStatement("INSERT INTO $table $sqlColumns VALUES $values;")
-
-        try{
-            preparedStatement.executeUpdate()
-            logger!!.info("Successfully inserted $values into $table")
-        }catch (ex: SQLException){
-            ex.printStackTrace()
-        }
-
-    }
-
-    fun updateColumnsWhere(table: String, columns: List<String>, where: String, values: Values){
-        var sqlString = "UPDATE $table SET "
-        var valuesString = ""
-
-        for(i in 1..columns.size){
-            if(i == columns.size){
                 valuesString += if(values.values[i-1] is String){
-                    "${columns[i-1]} = '${values.values[i-1]}' "
+                    "${columns[i-1]} = '${values.values[i-1]}', "
                 }else{
-                    "${columns[i-1]} = ${values.values[i-1]} "
+                    "${columns[i-1]} = ${values.values[i-1]}, "
                 }
-                continue
             }
-            valuesString += if(values.values[i-1] is String){
-                "${columns[i-1]} = '${values.values[i-1]}', "
-            }else{
-                "${columns[i-1]} = ${values.values[i-1]}, "
+            sqlString += valuesString
+            sqlString += "WHERE $where;"
+            val preparedStatement = connection!!.prepareStatement(sqlString)
+            try{
+                preparedStatement.executeUpdate()
+                logger!!.info("Successfully updated $columns to ${valuesString}where $where")
+            }catch (ex: SQLException){
+                ex.printStackTrace()
             }
-        }
-        sqlString += valuesString
-        sqlString += "WHERE $where;"
-        val preparedStatement = connection!!.prepareStatement(sqlString)
-        println(sqlString)
-        try{
-            preparedStatement.executeUpdate()
-            logger!!.info("Successfully updated $columns to ${valuesString}where $where")
-        }catch (ex: SQLException){
-            ex.printStackTrace()
         }
     }
 
-    fun getColumnsWhere(table: String, column: String, where: String, limit: Int = 1): List<Values> {
-        val preparedStatement = connection!!.prepareStatement("SELECT $column FROM $table WHERE $where")
-        val resultList = mutableListOf<Values>()
-        val results = preparedStatement.executeQuery()
-        var i = 0
-        while (results.next() && i < limit){
-            i++
-            resultList.add(Values(results.getString(1)))
+    fun getColumnsWhere(table: String, column: String, where: String, limit: Int = 1, dbCache: DBCache) = runBlocking {
+        launch {
+            val preparedStatement = connection!!.prepareStatement("SELECT $column FROM $table WHERE $where")
+            val resultList = mutableListOf<Values>()
+            val results = preparedStatement.executeQuery()
+            var i = 0
+            while (results.next() && i < limit){
+                i++
+                resultList.add(Values(results.getString(1)))
+            }
+            dbCache.columns = resultList
         }
-        return resultList
     }
 
-    fun getTable(table: String, orderColumn: String = "", orderStyle: String = "", limit: Int = Int.MAX_VALUE): List<Values> {
-        val columnsStatement = connection!!
-            .prepareStatement(
+    fun getTable(table: String, orderColumn: String = "",
+                 orderStyle: String = "", limit: Int = Int.MAX_VALUE, dbCache: DBCache) = runBlocking {
+        launch {
+            val columnsStatement = connection!!
+                .prepareStatement(
                     "SELECT COLUMN_NAME " +
-                        "FROM INFORMATION_SCHEMA.COLUMNS " +
-                        "WHERE TABLE_NAME  = '$table' " +
-                        "ORDER BY ORDINAL_POSITION"
-            )
-        val columnsList = mutableListOf<String>()
-        val columnsResults = columnsStatement.executeQuery()
+                            "FROM INFORMATION_SCHEMA.COLUMNS " +
+                            "WHERE TABLE_NAME  = '$table' " +
+                            "ORDER BY ORDINAL_POSITION"
+                )
+            val columnsList = mutableListOf<String>()
+            val columnsResults = columnsStatement.executeQuery()
 
-        while (columnsResults.next()){
-            columnsList.add(columnsResults.getString(1))
-        }
-
-        val columns = mutableListOf(Values(*columnsList.toTypedArray()))
-
-        var sqlQuery = "SELECT * FROM $table"
-
-        if(orderStyle.isNotBlank()){
-            sqlQuery += " ORDER BY $orderColumn $orderStyle"
-        }
-
-        val tablePreparedStatement = connection!!.prepareStatement(sqlQuery)
-        val tableResults = tablePreparedStatement.executeQuery()
-
-        val tempList = mutableListOf<Any>()
-
-        var i = 0
-        while (tableResults.next() && i < limit){
-            i++
-            for (y in 1..columnsList.size){
-                tempList.add(tableResults.getString(y))
+            while (columnsResults.next()){
+                columnsList.add(columnsResults.getString(1))
             }
-            columns.add(Values(*tempList.toTypedArray()))
-            tempList.clear()
+
+            val columns = mutableListOf(Values(*columnsList.toTypedArray()))
+
+            var sqlQuery = "SELECT * FROM $table"
+
+            if(orderColumn.isNotBlank()){
+                sqlQuery += " ORDER BY $orderColumn $orderStyle"
+            }
+
+            val tablePreparedStatement = connection!!.prepareStatement(sqlQuery)
+            val tableResults = tablePreparedStatement.executeQuery()
+
+            val tempList = mutableListOf<Any>()
+
+            var i = 0
+            while (tableResults.next() && i < limit){
+                i++
+                for (y in 1..columnsList.size){
+                    tempList.add(tableResults.getString(y))
+                }
+                columns.add(Values(*tempList.toTypedArray()))
+                tempList.clear()
+            }
+            dbCache.table = columns
         }
-        return columns
     }
 
     fun connect(){

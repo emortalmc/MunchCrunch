@@ -4,6 +4,7 @@ import com.google.gson.JsonParser
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.instance.Instance
 import java.nio.file.Path
+import java.util.*
 import kotlin.io.path.createFile
 import kotlin.io.path.exists
 import kotlin.io.path.readText
@@ -21,7 +22,7 @@ object LeaderboardUtil {
             val jsonObject = it.asJsonObject
             leaderboards.add(
                 Leaderboard(
-                    jsonObject.get("id").asInt,
+                    UUID.fromString(jsonObject.get("id").asString),
                     jsonObject.get("title").asString,
                     jsonObject.get("top").asInt,
                     jsonObject.get("stat").asString,
