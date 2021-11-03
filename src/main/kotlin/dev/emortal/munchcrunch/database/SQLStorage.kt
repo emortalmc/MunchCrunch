@@ -1,4 +1,4 @@
-//TODO Make calls async
+//TODO improve async calls
 
 package dev.emortal.munchcrunch.database
 
