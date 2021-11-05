@@ -22,7 +22,12 @@ class SQLStorage(credentials: DatabaseCredentials) {
     private var connection: Connection? = null
 
 
-    fun insertIntoTable(table: String, columns: List<String>, vararg data: Values) = runBlocking {
+    fun insertIntoTable(
+        table: String,
+        columns: List<String>,
+        whatToRun: MethodHolder = MethodHolder(),
+        vararg data: Values
+    ) = runBlocking {
         launch {
             var values = ""
             var sqlColumns = "("
@@ -66,10 +71,17 @@ class SQLStorage(credentials: DatabaseCredentials) {
             }catch (ex: SQLException){
                 ex.printStackTrace()
             }
+            whatToRun.codeToRun()
         }
     }
 
-    fun updateColumnsWhere(table: String, columns: List<String>, where: String, values: Values) = runBlocking {
+    fun updateColumnsWhere(
+        table: String,
+        columns: List<String>,
+        where: String,
+        values: Values,
+        whatToRun: MethodHolder = MethodHolder()
+    ) = runBlocking {
         launch {
             var sqlString = "UPDATE $table SET "
             var valuesString = ""
@@ -98,10 +110,18 @@ class SQLStorage(credentials: DatabaseCredentials) {
             }catch (ex: SQLException){
                 ex.printStackTrace()
             }
+            whatToRun.codeToRun()
         }
     }
 
-    fun getColumnsWhere(table: String, column: String, where: String, limit: Int = 1, dbCache: DBCache) = runBlocking {
+    fun getColumnsWhere(
+        table: String,
+        column: String,
+        where: String,
+        limit: Int = 1,
+        dbCache: DBCache,
+        whatToRun: MethodHolder = MethodHolder()
+    ) = runBlocking {
         launch {
             val preparedStatement = connection!!.prepareStatement("SELECT $column FROM $table WHERE $where")
             val resultList = mutableListOf<Values>()
@@ -112,6 +132,7 @@ class SQLStorage(credentials: DatabaseCredentials) {
                 resultList.add(Values(results.getString(1)))
             }
             dbCache.columns = resultList
+            whatToRun.codeToRun()
         }
     }
 
