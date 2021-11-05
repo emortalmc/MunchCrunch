@@ -4,6 +4,8 @@ import dev.emortal.munchcrunch.MethodHolder
 import dev.emortal.munchcrunch.database.DBCache
 import dev.emortal.munchcrunch.database.DatabaseUtil
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.format.NamedTextColor
+import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
@@ -28,7 +30,7 @@ class Leaderboard(val id: UUID,
         DatabaseUtil.mainDB!!.getTable("testtable3", stat, "DESC", top, dbCache,
             object : MethodHolder() {
                 override fun codeToRun(){
-                    println("WAIT THERES NO WAY THIS WILL WORK")
+                    println("Got initial table")
                 }
             }
         )
@@ -38,20 +40,41 @@ class Leaderboard(val id: UUID,
         val titleHologram = Entity(EntityType.ARMOR_STAND)
         titleHologram.customName = Component.text(title)
         titleHologram.isCustomNameVisible = true
-        var tempEntity = Entity(EntityType.ARMOR_STAND)
-        tempEntity.setInstance(instance, position)
+
         for (row in dbCache.table){
             val entity = Entity(EntityType.ARMOR_STAND)
             val armorStandMeta = entity.entityMeta as ArmorStandMeta
-            entity.setInstance(instance, position)
+            entity.setInstance(instance)
             armorStandMeta.isSmall = true
             entity.isCustomNameVisible = true
-            entity.customName = Component.text("${row.values[0]} ${row.values[columnInt]}")
             entity.isInvisible = true
             entity.setGravity(0.0, 0.0)
-            entity.teleport(tempEntity.position.withY(tempEntity.position.y() + 0.3))
-            tempEntity = entity
             armorstands.add(entity)
+            entity.customName = Component.text(
+                "Name ",
+                NamedTextColor.GOLD)
+                .append(
+                    Component.text("${row.values[columnInt]}", NamedTextColor.YELLOW)
+                )
+            if(row == dbCache.table[0]) continue
+            entity.customName = Component.text(
+                "${
+                    MinecraftServer.getConnectionManager()
+                        .getPlayer(UUID.fromString(row.values[0] as String?))?.username
+                }: ",
+                NamedTextColor.GOLD)
+                .append(
+                    Component.text("${row.values[columnInt]}", NamedTextColor.YELLOW)
+                )
+        }
+        var tempEntity = armorstands[0]
+        tempEntity.setInstance(instance, position)
+
+        armorstands.reverse()
+        for(armorstand in armorstands){
+            if(armorstand == armorstands[0]) continue // skip first armorstand, since its already spawned
+            armorstand.teleport(tempEntity.position.withY(tempEntity.position.y() + 0.3))
+            tempEntity = armorstand
         }
         //TODO spawn and stack armorstands
     }
@@ -65,7 +88,7 @@ class Leaderboard(val id: UUID,
         DatabaseUtil.mainDB!!.getTable("testtable3", stat, "DESC", top, dbCache,
             object : MethodHolder() {
                 override fun codeToRun(){
-                    println("WAIT THERES NO WAY THIS WILL WORK")
+                    println("refresh")
                 }
             }
         )
