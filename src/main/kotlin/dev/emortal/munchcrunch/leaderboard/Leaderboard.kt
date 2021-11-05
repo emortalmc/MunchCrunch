@@ -1,5 +1,6 @@
 package dev.emortal.munchcrunch.leaderboard
 
+import dev.emortal.munchcrunch.MethodHolder
 import dev.emortal.munchcrunch.database.DBCache
 import dev.emortal.munchcrunch.database.DatabaseUtil
 import net.kyori.adventure.text.Component
@@ -24,7 +25,13 @@ class Leaderboard(val id: UUID,
     private var lastRefreshed = System.currentTimeMillis()
     val armorstands = mutableListOf<Entity>()
     init {
-        DatabaseUtil.mainDB!!.getTable("testtable3", stat, "DESC", top, dbCache)
+        DatabaseUtil.mainDB!!.getTable("testtable3", stat, "DESC", top, dbCache,
+            object : MethodHolder() {
+                override fun codeToRun(){
+                    println("WAIT THERES NO WAY THIS WILL WORK")
+                }
+            }
+        )
     }
     fun spawn(){
         println("work?")
@@ -55,7 +62,13 @@ class Leaderboard(val id: UUID,
 
     fun refresh() {
         lastRefreshed = System.currentTimeMillis()
-        DatabaseUtil.mainDB!!.getTable("testtable3", stat, "DESC", top, dbCache)
+        DatabaseUtil.mainDB!!.getTable("testtable3", stat, "DESC", top, dbCache,
+            object : MethodHolder() {
+                override fun codeToRun(){
+                    println("WAIT THERES NO WAY THIS WILL WORK")
+                }
+            }
+        )
         //TODO actually refresh
         println(refresh)
     }

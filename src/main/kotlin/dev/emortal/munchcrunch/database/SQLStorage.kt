@@ -2,6 +2,7 @@
 
 package dev.emortal.munchcrunch.database
 
+import dev.emortal.munchcrunch.MethodHolder
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.minestom.server.MinecraftServer
@@ -114,8 +115,13 @@ class SQLStorage(credentials: DatabaseCredentials) {
         }
     }
 
-    fun getTable(table: String, orderColumn: String = "",
-                 orderStyle: String = "", limit: Int = Int.MAX_VALUE, dbCache: DBCache) = runBlocking {
+    fun getTable(table: String,
+                 orderColumn: String = "",
+                 orderStyle: String = "",
+                 limit: Int = Int.MAX_VALUE,
+                 dbCache: DBCache,
+                 whatToRun: MethodHolder = MethodHolder()
+    ) = runBlocking {
         launch {
             val columnsStatement = connection!!
                 .prepareStatement(
@@ -154,6 +160,7 @@ class SQLStorage(credentials: DatabaseCredentials) {
                 tempList.clear()
             }
             dbCache.table = columns
+            whatToRun.codeToRun()
         }
     }
 
