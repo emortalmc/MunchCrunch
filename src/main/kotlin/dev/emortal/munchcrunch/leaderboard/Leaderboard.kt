@@ -14,6 +14,7 @@ import net.minestom.server.instance.Instance
 import java.util.*
 
 class Leaderboard(val id: UUID,
+                  val game: String,
                   val title: String,
                   val top: Int,
                   val stat: String,
@@ -27,7 +28,7 @@ class Leaderboard(val id: UUID,
     private var lastRefreshed = System.currentTimeMillis()
     val armorstands = mutableListOf<Entity>()
     init {
-        DatabaseUtil.mainDB!!.getTable("testtable3", stat, "DESC", top, dbCache,
+        DatabaseUtil.mainDB!!.getTable(game, stat, orderStyle, top, dbCache,
             object : MethodHolder() {
                 override fun codeToRun(){
                     println("Got initial table")
@@ -36,12 +37,16 @@ class Leaderboard(val id: UUID,
         )
     }
     fun spawn(){
-        println("work?")
         val titleHologram = Entity(EntityType.ARMOR_STAND)
         titleHologram.customName = Component.text(title)
         titleHologram.isCustomNameVisible = true
 
-        for (row in dbCache.table){
+        var tempEntity = Entity(EntityType.ARMOR_STAND)
+        tempEntity.setInstance(instance, position)
+
+        for (row in dbCache.table.reversed()){
+            if(row == dbCache.table[0]) continue
+
             val entity = Entity(EntityType.ARMOR_STAND)
             val armorStandMeta = entity.entityMeta as ArmorStandMeta
             entity.setInstance(instance)
@@ -50,13 +55,8 @@ class Leaderboard(val id: UUID,
             entity.isInvisible = true
             entity.setGravity(0.0, 0.0)
             armorstands.add(entity)
-            entity.customName = Component.text(
-                "Name ",
-                NamedTextColor.GOLD)
-                .append(
-                    Component.text("${row.values[columnInt]}", NamedTextColor.YELLOW)
-                )
-            if(row == dbCache.table[0]) continue
+
+
             entity.customName = Component.text(
                 "${
                     MinecraftServer.getConnectionManager()
@@ -66,17 +66,9 @@ class Leaderboard(val id: UUID,
                 .append(
                     Component.text("${row.values[columnInt]}", NamedTextColor.YELLOW)
                 )
+            entity.teleport(tempEntity.position.withY(tempEntity.position.y() + 0.3))
+            tempEntity = entity
         }
-        var tempEntity = armorstands[0]
-        tempEntity.setInstance(instance, position)
-
-        armorstands.reverse()
-        for(armorstand in armorstands){
-            if(armorstand == armorstands[0]) continue // skip first armorstand, since its already spawned
-            armorstand.teleport(tempEntity.position.withY(tempEntity.position.y() + 0.3))
-            tempEntity = armorstand
-        }
-        //TODO spawn and stack armorstands
     }
 
     fun isReadyToRefresh(): Boolean {
@@ -85,14 +77,13 @@ class Leaderboard(val id: UUID,
 
     fun refresh() {
         lastRefreshed = System.currentTimeMillis()
-        DatabaseUtil.mainDB!!.getTable("testtable3", stat, "DESC", top, dbCache,
+        DatabaseUtil.mainDB!!.getTable(game, stat, orderStyle, top, dbCache,
             object : MethodHolder() {
                 override fun codeToRun(){
-                    println("refresh")
+                    
                 }
             }
         )
         //TODO actually refresh
-        println(refresh)
     }
 }

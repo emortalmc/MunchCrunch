@@ -30,6 +30,7 @@ object LeaderboardUtil {
             leaderboards.add(
                 Leaderboard(
                     UUID.fromString(jsonObject.get("id").asString),
+                    game,
                     jsonObject.get("title").asString,
                     jsonObject.get("top").asInt,
                     jsonObject.get("stat").asString,
