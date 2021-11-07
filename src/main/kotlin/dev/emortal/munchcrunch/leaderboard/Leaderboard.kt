@@ -9,7 +9,7 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Entity
 import net.minestom.server.entity.EntityType
-import net.minestom.server.entity.metadata.other.ArmorStandMeta
+import net.minestom.server.entity.metadata.other.AreaEffectCloudMeta
 import net.minestom.server.instance.Instance
 import java.util.*
 
@@ -37,20 +37,19 @@ class Leaderboard(val id: UUID,
         )
     }
     fun spawn(){
-        val titleHologram = Entity(EntityType.ARMOR_STAND)
-        titleHologram.customName = Component.text(title)
-        titleHologram.isCustomNameVisible = true
 
-        var tempEntity = Entity(EntityType.ARMOR_STAND)
+        var tempEntity = Entity(EntityType.AREA_EFFECT_CLOUD)
         tempEntity.setInstance(instance, position)
+        val temp_areaEffectCloudMeta = tempEntity.entityMeta as AreaEffectCloudMeta
+        temp_areaEffectCloudMeta.radius = 0f
 
         for (row in dbCache.table.reversed()){
             if(row == dbCache.table[0]) continue
 
-            val entity = Entity(EntityType.ARMOR_STAND)
-            val armorStandMeta = entity.entityMeta as ArmorStandMeta
+            val entity = Entity(EntityType.AREA_EFFECT_CLOUD)
+            val areaEffectCloudMeta = entity.entityMeta as AreaEffectCloudMeta
+            areaEffectCloudMeta.radius = 0f
             entity.setInstance(instance)
-            armorStandMeta.isSmall = true
             entity.isCustomNameVisible = true
             entity.isInvisible = true
             entity.setGravity(0.0, 0.0)
@@ -80,7 +79,7 @@ class Leaderboard(val id: UUID,
         DatabaseUtil.mainDB!!.getTable(game, stat, orderStyle, top, dbCache,
             object : MethodHolder() {
                 override fun codeToRun(){
-                    
+
                 }
             }
         )
