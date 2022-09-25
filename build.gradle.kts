@@ -41,7 +41,7 @@ dependencies {
     compileOnly("com.github.Minestom", "Minestom", "85d9256fa8")
 
     // import kotlinx serialization
-    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2")
+    compileOnly("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.0")
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.0")
     compileOnly("com.github.Project-Cepi:KStom:9278ca7")
     implementation("org.mariadb.jdbc:mariadb-java-client:2.7.3")
